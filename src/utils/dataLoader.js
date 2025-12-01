@@ -2,10 +2,11 @@ import { loadCSV } from '../data/csvLoader';
 import { DONG_COORDINATES } from '../data/dongCoordinates';
 
 // Filenames
-const FILE_RENT = '행정동별 임대료_2025_2분기_환산임대료.csv'; 
+// Filenames
+const FILE_RENT = '행정동별 임대료_2025_2분기_환산임대료.csv';
 const FILE_POP = '서울시 상권분석서비스(길단위인구-행정동).csv';
-const FILE_OPENINGS = '서울시 상권분석서비스(점포-행정동)_2024년 2.csv';
-const FILE_REVENUE = '서울시 상권분석서비스(추정매출-행정동)_2024년.csv';
+const FILE_OPENINGS = '서울시 상권분석서비스(점포-행정동)_2024년 2.csv';
+const FILE_REVENUE = '서울시 상권분석서비스(추정매출-행정동)_2024년.csv';
 
 export const loadAllData = async () => {
     try {
@@ -20,18 +21,18 @@ export const loadAllData = async () => {
 
         // Initialize Data Structure
         Object.keys(DONG_COORDINATES).forEach(dong => {
-            dongData[dong] = { 
-                rent: 0, 
-                population: 0, 
-                openings: 0, 
-                closeCount: 0, 
+            dongData[dong] = {
+                rent: 0,
+                population: 0,
+                openings: 0,
+                closeCount: 0,
                 totalStores: 0, // Add Total Stores
                 revenue: 0,
                 revenueHistory: {}, // Store quarterly revenue
                 // Detail Data Containers
                 revenueByTime: Array(6).fill(0), // 00-06, 06-11, 11-14, 14-17, 17-21, 21-24
-                revenueByAge: { '10':0, '20':0, '30':0, '40':0, '50':0, '60':0 },
-                revenueByDay: { 'Mon':0, 'Tue':0, 'Wed':0, 'Thu':0, 'Fri':0, 'Sat':0, 'Sun':0 }
+                revenueByAge: { '10': 0, '20': 0, '30': 0, '40': 0, '50': 0, '60': 0 },
+                revenueByDay: { 'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0 }
             };
         });
 
@@ -41,7 +42,7 @@ export const loadAllData = async () => {
             if (dongName) dongName = dongName.replace(/·/g, '.');
 
             const rawValue = row['전체'];
-            
+
             if (dongName && rawValue && dongData[dongName]) {
                 const rentSqM = parseInt(String(rawValue).replace(/,/g, ''), 10);
                 if (!isNaN(rentSqM)) {
@@ -64,15 +65,15 @@ export const loadAllData = async () => {
 
         // 3. Openings Data (Store Status)
         openingsRaw.forEach(row => {
-            let dongName = row['행정동_코드_명']; 
+            let dongName = row['행정동_코드_명'];
             if (dongName) dongName = dongName.replace(/·/g, '.');
 
             const openVal = parseInt(row['개업_점포_수'] || 0);
-            const closeVal = parseInt(row['폐업_점포_수'] || 0); 
+            const closeVal = parseInt(row['폐업_점포_수'] || 0);
             const totalStoreVal = parseInt(row['점포_수'] || 0); // Parse Total Stores
 
             if (dongName && dongData[dongName]) {
-                dongData[dongName].openings += openVal; 
+                dongData[dongName].openings += openVal;
                 dongData[dongName].closeCount += closeVal;
                 dongData[dongName].totalStores += totalStoreVal;
             }
@@ -126,14 +127,14 @@ export const loadAllData = async () => {
         const formattedData = {};
         Object.keys(dongData).forEach(dong => {
             const d = dongData[dong];
-            
+
             // 1. Revenue: Calculate Monthly Revenue per Store
             // d.revenue is Quarterly Total.
             // Monthly Avg = (Total / StoreCount) / 3
             // Use Total Store Count from data
-            const storeCount = d.totalStores || (d.openings + d.closeCount) || 1; 
+            const storeCount = d.totalStores || (d.openings + d.closeCount) || 1;
             const monthlyRevenuePerStore = (d.revenue / storeCount) / 3;
-            
+
             // 2. Population: Calculate Daily Floating Population
             // d.population is Quarterly Total.
             const dailyPopulation = d.population / 90;
@@ -143,7 +144,7 @@ export const loadAllData = async () => {
             const trendArray = Object.keys(d.revenueHistory).sort().map(q => d.revenueHistory[q]);
 
             formattedData[dong] = {
-                rent: d.rent, 
+                rent: d.rent,
                 population: Math.round(dailyPopulation),
                 openings: d.openings,
                 closeCount: d.closeCount,
